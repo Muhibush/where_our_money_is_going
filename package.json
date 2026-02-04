@@ -1,0 +1,7 @@
+{
+  "name": "family-budget-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
