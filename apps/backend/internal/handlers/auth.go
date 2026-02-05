@@ -28,14 +28,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := `INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)`
-	result, err := database.DB.Exec(query, req.Name, req.Email, string(hashedPassword))
+	query := `INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id`
+	var id int64
+	err = database.DB.QueryRow(query, req.Name, req.Email, string(hashedPassword)).Scan(&id)
 	if err != nil {
 		http.Error(w, "Email already in use", http.StatusConflict)
 		return
 	}
 
-	id, _ := result.LastInsertId()
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id})
 }
@@ -48,7 +48,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	query := `SELECT id, name, email, password_hash, created_at FROM users WHERE email = ?`
+	query := `SELECT id, name, email, password_hash, created_at FROM users WHERE email = $1`
 	row := database.DB.QueryRow(query, req.Email)
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.CreatedAt)
 

@@ -4,14 +4,14 @@ import (
 	"database/sql"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
 func InitDB(dataSourceName string) {
 	var err error
-	DB, err = sql.Open("sqlite3", dataSourceName)
+	DB, err = sql.Open("postgres", dataSourceName)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -27,25 +27,24 @@ func InitDB(dataSourceName string) {
 func createTables() {
 	userTable := `
 	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL,
-		email TEXT UNIQUE NOT NULL,
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		email VARCHAR(255) UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 	);`
 
 	transactionTable := `
 	CREATE TABLE IF NOT EXISTS transactions (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		user_id INTEGER NOT NULL,
-		amount REAL NOT NULL,
-		type TEXT NOT NULL,
-		category TEXT NOT NULL,
-		date DATETIME NOT NULL,
+		id SERIAL PRIMARY KEY,
+		user_id INTEGER NOT NULL REFERENCES users(id),
+		amount NUMERIC(12,2) NOT NULL,
+		type VARCHAR(50) NOT NULL,
+		category VARCHAR(100) NOT NULL,
+		date TIMESTAMPTZ NOT NULL,
 		note TEXT,
-		payment_method TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY(user_id) REFERENCES users(id)
+		payment_method VARCHAR(100),
+		created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 	);`
 
 	if _, err := DB.Exec(userTable); err != nil {

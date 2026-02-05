@@ -14,7 +14,7 @@ import (
 func ListTransactions(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id").(int)
 
-	rows, err := database.DB.Query(`SELECT id, user_id, amount, type, category, date, note, payment_method, created_at FROM transactions WHERE user_id = ? ORDER BY date DESC`, userID)
+	rows, err := database.DB.Query(`SELECT id, user_id, amount, type, category, date, note, payment_method, created_at FROM transactions WHERE user_id = $1 ORDER BY date DESC`, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -53,15 +53,15 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) {
 		req.Date = time.Now()
 	}
 
-	query := `INSERT INTO transactions (user_id, amount, type, category, date, note, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?)`
-	result, err := database.DB.Exec(query, userID, req.Amount, req.Type, req.Category, req.Date, req.Note, req.PaymentMethod)
+	query := `INSERT INTO transactions (user_id, amount, type, category, date, note, payment_method) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	var id int
+	err := database.DB.QueryRow(query, userID, req.Amount, req.Type, req.Category, req.Date, req.Note, req.PaymentMethod).Scan(&id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	id, _ := result.LastInsertId()
-	req.ID = int(id)
+	req.ID = id
 	req.UserID = userID
 
 	w.WriteHeader(http.StatusCreated)
@@ -73,7 +73,7 @@ func DeleteTransaction(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, _ := strconv.Atoi(idStr)
 
-	query := `DELETE FROM transactions WHERE id = ? AND user_id = ?`
+	query := `DELETE FROM transactions WHERE id = $1 AND user_id = $2`
 	result, err := database.DB.Exec(query, id, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

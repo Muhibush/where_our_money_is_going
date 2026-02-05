@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -13,7 +14,11 @@ import (
 
 func main() {
 	// Initialize Database
-	database.InitDB("./where_money.db")
+	databaseURL := os.Getenv("DATABASE_URL")
+	if databaseURL == "" {
+		log.Fatal("DATABASE_URL environment variable is required")
+	}
+	database.InitDB(databaseURL)
 
 	r := chi.NewRouter()
 
