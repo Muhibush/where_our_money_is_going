@@ -1,6 +1,6 @@
 module github.com/muhibush/where_our_money_is_going/backend
 
-go 1.25.6
+go 1.23.0
 
 require (
 	github.com/go-chi/chi/v5 v5.2.4
