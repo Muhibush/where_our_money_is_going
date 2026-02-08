@@ -48,8 +48,13 @@ func main() {
 		r.Delete("/api/transactions/{id}", handlers.DeleteTransaction)
 	})
 
-	log.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Println("Server starting on :" + port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatal(err)
 	}
 }

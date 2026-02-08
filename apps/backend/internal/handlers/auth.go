@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,7 +14,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtKey = []byte("super-secret-key-for-mvp") // In production, use os.Getenv
+var jwtKey []byte
+
+func init() {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "super-secret-key-for-mvp"
+	}
+	jwtKey = []byte(secret)
+}
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	var req models.RegisterRequest
